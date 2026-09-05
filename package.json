@@ -1,0 +1,13 @@
+{
+  "name": "oodo",
+  "version": "1.0.0",
+  "description": "PeoplePay360 - Integrated HR & Payroll Operations Platform",
+  "private": true,
+  "scripts": {
+    "start:backend": "npm --prefix backend run start:dev",
+    "start:frontend": "npm --prefix frontend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend"
+  }
+}

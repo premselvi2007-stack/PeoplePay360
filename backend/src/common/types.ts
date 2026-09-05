@@ -1,0 +1,45 @@
+export enum Role {
+  EMPLOYEE = 'EMPLOYEE',
+  HR_MANAGER = 'HR_MANAGER',
+  HR_PAYROLL_USER = 'HR_PAYROLL_USER',
+  HR_PAYROLL_MANAGER = 'HR_PAYROLL_MANAGER',
+  ADMIN = 'ADMIN',
+}
+
+export enum ComputationType {
+  FIXED = 'FIXED',
+  PERCENTAGE = 'PERCENTAGE',
+  FORMULA = 'FORMULA',
+}
+
+export enum RuleCategory {
+  BASIC = 'BASIC',
+  ALLOWANCE = 'ALLOWANCE',
+  GROSS = 'GROSS',
+  DEDUCTION = 'DEDUCTION',
+  NET = 'NET',
+}
+
+export enum PayrunStatus {
+  DRAFT = 'DRAFT',
+  COMPUTING = 'COMPUTING',
+  COMPUTED = 'COMPUTED',
+  VALIDATING = 'VALIDATING',
+  VALIDATED = 'VALIDATED',
+  PAID = 'PAID',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum PayslipStatus {
+  DRAFT = 'DRAFT',
+  COMPUTED = 'COMPUTED',
+  VERIFIED = 'VERIFIED',
+  PAID = 'PAID',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum WarningType {
+  BLOCKING_ERROR = 'BLOCKING_ERROR',
+  BUSINESS_WARNING = 'BUSINESS_WARNING',
+  DATA_EXCEPTION = 'DATA_EXCEPTION',
+}
