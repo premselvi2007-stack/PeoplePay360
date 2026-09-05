@@ -27,6 +27,7 @@ export class AttendanceService {
 
   async findAll(query?: {
     employeeId?: string;
+    search?: string;
     startDate?: string;
     endDate?: string;
     status?: string;
@@ -40,6 +41,15 @@ export class AttendanceService {
       where.employeeId = query.userEmployeeId;
     } else if (query?.employeeId) {
       where.employeeId = query.employeeId;
+    } else if (query?.search) {
+      // Search by employee name
+      where.employee = {
+        OR: [
+          { firstName: { contains: query.search, mode: 'insensitive' } },
+          { lastName: { contains: query.search, mode: 'insensitive' } },
+          { employeeCode: { contains: query.search, mode: 'insensitive' } },
+        ],
+      };
     }
 
     if (query?.status) {
@@ -122,12 +132,18 @@ export class AttendanceService {
       if (!existing.checkOut) {
         throw new BadRequestException('Employee is already checked in. Please punch out when done.');
       }
-      // If already checked out today, allow resuming shift
+      // If already checked out today, allow resuming shift with new check-in timestamp
+      let resumeStatus = 'PRESENT';
+      if (now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 15)) {
+        resumeStatus = 'LATE';
+      }
       return this.prisma.attendance.update({
         where: { id: existing.id },
         data: {
+          checkIn: now,
           checkOut: null,
-          status: 'PRESENT',
+          workedHours: 0,
+          status: resumeStatus,
         },
       });
     }

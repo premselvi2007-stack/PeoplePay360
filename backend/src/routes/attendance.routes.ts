@@ -9,6 +9,7 @@ router.get('/', authenticateJWT, async (req: AuthenticatedRequest, res: Response
   try {
     const list = await attendanceService.findAll({
       employeeId: req.query.employeeId as string,
+      search: req.query.search as string,
       startDate: req.query.startDate as string,
       endDate: req.query.endDate as string,
       status: req.query.status as string,
