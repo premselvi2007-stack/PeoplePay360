@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 
-@Injectable()
 export class SalaryStructuresService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaClient) {}
 
   async findAll() {
     return this.prisma.salaryStructure.findMany({

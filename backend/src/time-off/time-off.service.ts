@@ -1,10 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 
 export interface CreateTimeOffTypeDto {
   name: string;
@@ -35,9 +30,8 @@ export interface CreateRequestDto {
   reason?: string;
 }
 
-@Injectable()
 export class TimeOffService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaClient) {}
 
   // ==================== TIME OFF TYPES ====================
   async getTypes() {

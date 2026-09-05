@@ -23,6 +23,7 @@ import { Badge } from '../components/ui/Badge';
 import { CookieBanner } from '../components/ui/CookieBanner';
 import { api } from '../lib/api';
 import { useToast } from '../components/ui/Toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const AppShell: React.FC = () => {
   const { user, logout, isAdmin, isHRManager, isPayrollUser } = useAuth();
@@ -30,8 +31,25 @@ export const AppShell: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
+  const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPunching, setIsPunching] = useState(false);
+
+  // Real-time attendance state for the logged-in employee
+  const { data: todayAttendance, refetch: refetchToday } = useQuery({
+    queryKey: ['attendance-today', user?.employeeId],
+    queryFn: () => api.get<any>('/attendance/today'),
+    enabled: !!user?.employeeId,
+  });
+
+  const isCheckedIn = !!todayAttendance?.isCheckedIn;
+  const isCheckedOut = !!todayAttendance?.isCheckedOut;
+  const checkInTime = todayAttendance?.record?.checkIn
+    ? new Date(todayAttendance.record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null;
+  const checkOutTime = todayAttendance?.record?.checkOut
+    ? new Date(todayAttendance.record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : null;
 
   const handleLogout = async () => {
     await logout();
@@ -42,7 +60,12 @@ export const AppShell: React.FC = () => {
     try {
       setIsPunching(true);
       await api.post('/attendance/check-in', { timestamp: new Date().toISOString() });
-      toast.success('Punched In Successfully', `Recorded at ${new Date().toLocaleTimeString()}`);
+      await refetchToday();
+      queryClient.invalidateQueries({ queryKey: ['attendances'] });
+      toast.success(
+        isCheckedOut ? 'Shift Resumed' : 'Punched In Successfully',
+        `Recorded at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      );
     } catch (err: any) {
       toast.error('Check-in failed', err.message);
     } finally {
@@ -53,8 +76,13 @@ export const AppShell: React.FC = () => {
   const handleQuickCheckOut = async () => {
     try {
       setIsPunching(true);
-      await api.post('/attendance/check-out', { timestamp: new Date().toISOString() });
-      toast.success('Punched Out Successfully', `Recorded at ${new Date().toLocaleTimeString()}`);
+      const res: any = await api.post('/attendance/check-out', { timestamp: new Date().toISOString() });
+      await refetchToday();
+      queryClient.invalidateQueries({ queryKey: ['attendances'] });
+      toast.success(
+        isCheckedOut ? 'Updated Check-out' : 'Punched Out Successfully',
+        `Shift duration: ${res?.workedHours ?? todayAttendance?.record?.workedHours ?? 0} hrs recorded`
+      );
     } catch (err: any) {
       toast.error('Check-out failed', err.message);
     } finally {
@@ -127,22 +155,51 @@ export const AppShell: React.FC = () => {
         {/* Right: Quick Punch, Role Badge, Theme Switcher, User Menu */}
         <div className="flex items-center gap-2.5 sm:gap-3.5">
           {/* Quick Punch In / Out Actions */}
-          <div className="hidden md:flex items-center gap-1.5 bg-canvas-light dark:bg-neutral-900 p-1 rounded-neo border border-ink-300 dark:border-neutral-700">
-            <button
-              onClick={handleQuickCheckIn}
-              disabled={isPunching}
-              className="text-[11px] font-bold px-2.5 py-1 bg-emerald-600 text-white rounded border border-emerald-700 hover:bg-emerald-700 shadow-neo-sm active:translate-y-0.5"
-            >
-              Punch In
-            </button>
-            <button
-              onClick={handleQuickCheckOut}
-              disabled={isPunching}
-              className="text-[11px] font-bold px-2.5 py-1 bg-ink-200 text-ink-800 dark:bg-neutral-800 dark:text-ink-200 rounded hover:bg-ink-300 dark:hover:bg-neutral-700 border border-ink-400 dark:border-neutral-600"
-            >
-              Punch Out
-            </button>
-          </div>
+          {user?.employeeId && (
+            <div className="hidden md:flex items-center gap-1.5 bg-canvas-light dark:bg-neutral-900 p-1 rounded-neo border border-ink-300 dark:border-neutral-700">
+              {/* Status indicator badge */}
+              {isCheckedIn && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 rounded border border-emerald-300 dark:border-emerald-800">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>In: {checkInTime}</span>
+                </div>
+              )}
+
+              {isCheckedOut && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 rounded border border-blue-300 dark:border-blue-800">
+                  <span>Out: {checkOutTime} ({todayAttendance?.record?.workedHours}h)</span>
+                </div>
+              )}
+
+              {/* Punch In / Resume Button */}
+              {(!isCheckedIn || isCheckedOut) && (
+                <button
+                  onClick={handleQuickCheckIn}
+                  disabled={isPunching}
+                  className="text-[11px] font-bold px-2.5 py-1 bg-emerald-600 text-white rounded border border-emerald-700 hover:bg-emerald-700 shadow-neo-sm active:translate-y-0.5 transition-all disabled:opacity-50"
+                  title={isCheckedOut ? 'Resume shift or clock in again' : 'Clock in for today'}
+                >
+                  {isPunching ? '...' : isCheckedOut ? 'Punch In Again' : 'Punch In'}
+                </button>
+              )}
+
+              {/* Punch Out / Update Button */}
+              {(isCheckedIn || isCheckedOut) && (
+                <button
+                  onClick={handleQuickCheckOut}
+                  disabled={isPunching}
+                  className={`text-[11px] font-bold px-2.5 py-1 rounded border shadow-neo-sm active:translate-y-0.5 transition-all disabled:opacity-50 ${
+                    isCheckedIn
+                      ? 'bg-rose-600 text-white border-rose-700 hover:bg-rose-700'
+                      : 'bg-ink-100 text-ink-700 dark:bg-neutral-800 dark:text-ink-200 border-ink-300 dark:border-neutral-600 hover:bg-ink-200'
+                  }`}
+                  title={isCheckedOut ? 'Update checkout time with latest timestamp' : 'Clock out and record worked hours'}
+                >
+                  {isPunching ? '...' : isCheckedOut ? 'Update Punch Out' : 'Punch Out'}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Theme Switcher */}
           <button

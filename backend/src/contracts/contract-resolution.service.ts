@@ -1,5 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
 
 export interface ContractResolutionResult {
   contract: any | null;
@@ -8,11 +7,10 @@ export interface ContractResolutionResult {
   isBlocking: boolean;
 }
 
-@Injectable()
 export class ContractResolutionService {
-  private readonly logger = new Logger(ContractResolutionService.name);
+  
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaClient) {}
 
   /**
    * Resolves the single valid contract for an employee applicable to a specific payroll period.

@@ -1,10 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 import { ContractResolutionService } from './contract-resolution.service';
 
 export interface CreateContractInput {
@@ -21,10 +16,9 @@ export interface CreateContractInput {
   notes?: string;
 }
 
-@Injectable()
 export class ContractsService {
   constructor(
-    private prisma: PrismaService,
+    private prisma: PrismaClient,
     private contractResolutionService: ContractResolutionService,
   ) {}
 

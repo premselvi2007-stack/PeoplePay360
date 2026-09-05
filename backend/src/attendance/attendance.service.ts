@@ -1,10 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 
 export interface CheckInDto {
   employeeId?: string; // Optional if derived from CurrentUser
@@ -19,9 +14,8 @@ export interface ManualCorrectionDto {
   correctionNotes: string;
 }
 
-@Injectable()
 export class AttendanceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaClient) {}
 
   private calculateWorkedHours(checkIn: Date | null, checkOut: Date | null): number {
     if (!checkIn || !checkOut) return 0;
@@ -77,13 +71,22 @@ export class AttendanceService {
   }
 
   async getTodayStatus(employeeId: string) {
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
+
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const record = await this.prisma.attendance.findFirst({
       where: {
         employeeId,
-        date: today,
+        OR: [
+          { date: today },
+          { date: { gte: startOfDay, lte: endOfDay } },
+        ],
       },
     });
 
@@ -100,15 +103,33 @@ export class AttendanceService {
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
     const existing = await this.prisma.attendance.findFirst({
       where: {
         employeeId,
-        date: today,
+        OR: [
+          { date: today },
+          { date: { gte: startOfDay, lte: endOfDay } },
+        ],
       },
     });
 
     if (existing && existing.checkIn) {
-      throw new BadRequestException('Employee has already checked in for today');
+      if (!existing.checkOut) {
+        throw new BadRequestException('Employee is already checked in. Please punch out when done.');
+      }
+      // If already checked out today, allow resuming shift
+      return this.prisma.attendance.update({
+        where: { id: existing.id },
+        data: {
+          checkOut: null,
+          status: 'PRESENT',
+        },
+      });
     }
 
     // Determine if late (after 09:15)
@@ -143,19 +164,23 @@ export class AttendanceService {
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
     const existing = await this.prisma.attendance.findFirst({
       where: {
         employeeId,
-        date: today,
+        OR: [
+          { date: today },
+          { date: { gte: startOfDay, lte: endOfDay } },
+        ],
       },
     });
 
     if (!existing || !existing.checkIn) {
       throw new BadRequestException('No check-in record found for today. Please check in first.');
-    }
-
-    if (existing.checkOut) {
-      throw new BadRequestException('Employee has already checked out for today');
     }
 
     const workedHours = this.calculateWorkedHours(existing.checkIn, now);

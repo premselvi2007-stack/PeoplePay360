@@ -1,4 +1,3 @@
-import { Injectable, Logger } from '@nestjs/common';
 import {
   ComputedRuleLine,
   RuleEngineContext,
@@ -7,9 +6,8 @@ import {
 } from './interfaces';
 import { ExpressionEvaluator } from './expression-evaluator';
 
-@Injectable()
 export class RuleEngineService {
-  private readonly logger = new Logger(RuleEngineService.name);
+  
 
   /**
    * Execute sequenced salary rules for an employee within a given payroll context.
@@ -158,7 +156,7 @@ export class RuleEngineService {
         });
       } catch (err: any) {
         const errorMsg = `Rule [${rule.code}] (${rule.name}) execution failed: ${err.message}`;
-        this.logger.warn(errorMsg);
+        console.warn(errorMsg);
         warnings.push(errorMsg);
 
         lines.push({

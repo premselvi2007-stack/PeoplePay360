@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaClient } from '@prisma/client';
 
 export interface DashboardFilter {
   periodStartDate?: string;
@@ -7,9 +6,8 @@ export interface DashboardFilter {
   departmentId?: string;
 }
 
-@Injectable()
 export class DashboardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaClient) {}
 
   async getPayrollMetrics(filters?: DashboardFilter) {
     const payslipWhere: any = {};

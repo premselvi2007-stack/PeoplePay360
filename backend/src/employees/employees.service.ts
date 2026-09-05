@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 
 export interface CreateEmployeeInput {
   firstName: string;
@@ -29,9 +29,8 @@ export interface EmployeeQueryOptions {
   view?: 'list' | 'kanban';
 }
 
-@Injectable()
 export class EmployeesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaClient) {}
 
   async findAll(query?: EmployeeQueryOptions, userRole?: string, userEmployeeId?: string) {
     const whereClause: any = {};

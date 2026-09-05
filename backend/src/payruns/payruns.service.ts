@@ -1,10 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 import { ContractResolutionService } from '../contracts/contract-resolution.service';
 import { RuleEngineService } from '../rule-engine/rule-engine.service';
 import { EmailService } from '../notifications/email.service';
@@ -25,12 +20,11 @@ export interface CreatePayrunBatchDto {
   selectedEmployeeIds: string[];
 }
 
-@Injectable()
 export class PayrunsService {
-  private readonly logger = new Logger(PayrunsService.name);
+  
 
   constructor(
-    private prisma: PrismaService,
+    private prisma: PrismaClient,
     private contractResolutionService: ContractResolutionService,
     private ruleEngineService: RuleEngineService,
     private emailService: EmailService,

@@ -4,8 +4,9 @@
   "description": "PeoplePay360 - Integrated HR & Payroll Operations Platform",
   "private": true,
   "scripts": {
-    "start:backend": "npm --prefix backend run start:dev",
+    "start:backend": "npm --prefix backend run dev",
     "start:frontend": "npm --prefix frontend run dev",
+    "dev": "start \"Backend\" cmd /k \"npm --prefix backend run dev\" && start \"Frontend\" cmd /k \"npm --prefix frontend run dev\"",
     "build:backend": "npm --prefix backend run build",
     "build:frontend": "npm --prefix frontend run build",
     "build": "npm run build:backend && npm run build:frontend"

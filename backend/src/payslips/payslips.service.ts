@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 import { PdfService } from '../pdf/pdf.service';
 
 export interface PayslipsQuery {
@@ -10,10 +10,9 @@ export interface PayslipsQuery {
   endDate?: string;
 }
 
-@Injectable()
 export class PayslipsService {
   constructor(
-    private prisma: PrismaService,
+    private prisma: PrismaClient,
     private pdfService: PdfService,
   ) {}
 

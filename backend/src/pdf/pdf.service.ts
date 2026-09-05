@@ -1,9 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 
-@Injectable()
 export class PdfService {
-  private readonly logger = new Logger(PdfService.name);
+  
 
   /**
    * Generates a PDF buffer for a payslip

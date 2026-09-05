@@ -1,10 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 import { RuleEngineService } from '../rule-engine/rule-engine.service';
 import { ExpressionEvaluator } from '../rule-engine/expression-evaluator';
 
@@ -34,10 +29,9 @@ export interface TestRuleCalculationInput {
   overtimeHours?: number;
 }
 
-@Injectable()
 export class SalaryRulesService {
   constructor(
-    private prisma: PrismaService,
+    private prisma: PrismaClient,
     private ruleEngineService: RuleEngineService,
   ) {}
 

@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException, BadRequestException, ConflictException, ForbiddenException, UnauthorizedException } from '../common/errors';
+import { PrismaClient } from '@prisma/client';
 
 export interface ScheduleDayInput {
   dayOfWeek: string;
@@ -9,9 +9,8 @@ export interface ScheduleDayInput {
   isWorkingDay: boolean;
 }
 
-@Injectable()
 export class WorkingSchedulesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaClient) {}
 
   /**
    * Helper: Calculate total hours worked in a single day
